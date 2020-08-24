@@ -129,7 +129,7 @@ turn solid blue for the first PS4 controller connect, red for the second, etc.
   the default mapping of the controller buttons. When this driver is used, the
   Xbox One S Controller vibrates upon connection.
 - The command `steamlink` logs the folowing warnings/errors when using the default
-  driver, however this does not result in any noticeable issue.
+  driver, however this does not translates in any noticeable issue.
 
   Xbox One S controller:
 
@@ -137,15 +137,26 @@ turn solid blue for the first PS4 controller connect, red for the second, etc.
 
   PS4 controlller:
 
-      <!-- markdownlint-disable MD032 MD034 -->
+    <!-- markdownlint-disable MD032 MD034 -->
       (EE) event1  - Wireless Controller Touchpad: kernel bug: Touch jump detected and discarded.
-See https://wayland.freedesktop.org/libinput/doc/1.12.6/touchpad-jumping-cursors.html for details
+      See https://wayland.freedesktop.org/libinput/doc/1.12.6/touchpad-jumping-cursors.html for details
 
+- We can check the buttons and axis response of the controllers using the
+  command-line tool `jstest`. First, we need to identify the `/dev/input` handler
+  of our controllers by entering `cat /proc/bus/input/devices`. These handlers
+  can not be used to uniquely identify controllers and depends on the order the
+  controllers have been connected to the Raspberry Pi. The first controller
+  connected should receive the handler `js0`, the second `js1`, etc. If one controller
+  is disconnected, its handler will become available to the next controller to
+  connect. Once we have identified the handler of the controller that we want to
+  test, we can start `jstest`. For example,
 
-
-
-
-
+        $ jstest --normal /dev/input/js0
+        Driver version is 2.1.0.
+        Joystick (Xbox Wireless Controller) has 8 axes (X, Y, Z, Rz, Gas, Brake, Hat0X, Hat0Y)
+        and 15 buttons (BtnA, BtnB, BtnC, BtnX, BtnY, BtnZ, BtnTL, BtnTR, BtnTL2, BtnTR2, BtnSelect, BtnStart, BtnMode, BtnThumbL, BtnThumbR).
+        Testing ... (interrupt to exit)
+        Axes:  0:     0  1:     0  2:     0  3:     0  4:-32767  5:-32767  6:     0  7:     0 Buttons:  0:on   1:off  2:off  3:off  4:off  5:off  6:off  7:off  8:off  9:off 10:off 11:off 12:off 13:off 14:off sad
 
 <!--   
 
