@@ -11,15 +11,15 @@
 ### Features
 
 The Xbox One S Wireless Controller and the PS4 Controller configured according
-to this guide are perfectly support by [Steam Link for Raspberry Pi].
+to this guide are perfectly supported by [Steam Link for Raspberry Pi].
 
 - These controllers automatically reconnect to the Raspberry Pi when they are
   powered off/on.
 - The mapping of the buttons is identical to when they are directly connected to
   a computer running Steam.
 - The vibration functions of these controllers are fully supported when using
-  Steam Link (confirmed when playing [Cuphead])
-- These controllers can be be simulatenously connected (confirmed with one Xbox 
+  Steam Link (confirmed when playing to [Cuphead])
+- These controllers can be be simulatenously connected (confirmed with one Xbox
   One S Wireless Controller and two PS4 controllers)
 
 ### Install bluetoothctl
