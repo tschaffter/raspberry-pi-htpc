@@ -166,11 +166,47 @@ turn solid blue for the first PS4 controller connect, red for the second, etc.
 ## Configure the audio
 
 
+
+
 ## Steam Link
 
 ![steamlink_controllers_list](pictures/steamlink_controllers_list.png)
 
 <!--   
+
+
+On your host computer, find the audio playback settings and change your playback sample rate.
+
+44100Hz and 48000Hz playback sample rates usually work well for streaming. Some users find that switching from one to the other fixes distortion or crackling. 
+
+Yes. Seems to happen if there's ANY hiccups in FPS.
+
+check power, could also be a ground issue
+
+And...turning the display setting to anything other than 1080p fixed it. It must be the TV's deinterlacing process interfering with the Steam Link's.
+
+Inhome streaming only properly supports 48KHz audio and MacOS by default uses 44.1KHz
+
+
+
+
+Decreasing sound using alsamixer: crackling in the menu still present
+
+Here is one way you could do it. (in /etc/asound.conf or ~/.asoundrc)
+
+aplay example.mp3 is distorded!
+omxplayer -o hdmi example.mp3 is OK
+
+For wav you can use aplay. For mp3 you can use mpg123
+
+$ aplay example.wav
+Playing WAVE 'example.wav' : Signed 16 bit Little Endian, Rate 44100 Hz, Stereo
+
+Most of the audio on TV is fine but crackling clearly due to TV broken speakers
+
+
+
+=> Try bluetooth headphones
 
 
 Update host GPU driver
