@@ -35,6 +35,11 @@ Bluetooth module.
 
     sudo apt-get install pi-bluetooth
 
+Enable the bluetooth service to start at boot and check its status:
+
+    sudo systemctl enable bluetooth
+    sudo systemctl status bluetooth
+
 ### Disable ERTM
 
 The Bluetooth *enhanced retransmission mode (ERTM)* is enabled by default on the
@@ -149,7 +154,7 @@ turn solid blue for the first PS4 controller connect, red for the second, etc.
   connected should receive the handler `js0`, the second `js1`, etc. If one controller
   is disconnected, its handler will become available to the next controller to
   connect. Once we have identified the handler of the controller that we want to
-  test, we can start `jstest`. For example,
+  test, we can start `jstest`. For example:
 
         $ jstest --normal /dev/input/js0
         Driver version is 2.1.0.
@@ -158,10 +163,19 @@ turn solid blue for the first PS4 controller connect, red for the second, etc.
         Testing ... (interrupt to exit)
         Axes:  0:     0  1:     0  2:     0  3:     0  4:-32767  5:-32767  6:     0  7:     0 Buttons:  0:on   1:off  2:off  3:off  4:off  5:off  6:off  7:off  8:off  9:off 10:off 11:off 12:off 13:off 14:off sad
 
+## Configure the audio
+
+
+## Steam Link
+
+![steamlink_controllers_list](pictures/steamlink_controllers_list.png)
+
 <!--   
 
 
-
+Update host GPU driver
+Music on host pause when Steam Link start, then resume when turning Steam Link
+    off.
 
 
 
