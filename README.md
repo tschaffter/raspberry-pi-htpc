@@ -165,6 +165,46 @@ turn solid blue for the first PS4 controller connect, red for the second, etc.
 
 ## Configure the audio
 
+<!-- markdownlint-disable MD024 -->
+### Hardware
+
+- Jack audio speaker
+- HDTV with HDMI ports
+- [Micro-HDMI to HDMI TV Adapter Cable][uhdmi_hdmi_cable]
+  - Recommended features: 4K Video at 60 Hz, Audio Return Channel (ARC)
+
+### Test audio output devices
+
+First we need to check that our audio hardware is functional before moving on with
+the software configuration. For this test, we use the video player [Omxplayer]
+specifically made for the Raspberry Pi's GPU from the Kodi project. Omxplayer
+player is installed by default on Raspbian OS Lite.
+
+### Test jack audio output
+
+Connect your speaker or headset to the jack port of the Raspberry Pi. Run the
+following commands to download and play an mp3 sample file with the audio output
+directed to the jack port (`-o local`).
+
+    curl -O https://raw.githubusercontent.com/tschaffter/raspberry-pi-htpc/master/audio/example.mp3
+    omxplayer -o local example.mp3
+
+### Test HDMI audio ouput
+
+Connect your HDTV to the Raspberry Pi using a recent micro-HDMI to HDMI cable.
+Over the years, many improvements have been brought by different versions
+of the HDMI protocol and hardware to continuously improve audio support. Here we
+connect the cable to the Raspberry Pi HDMI port adjacent to the USB-C power input
+(labelled HDMI0) because only this port supports 4K with a 60Hz refresh rate.
+
+Download the mp3 sample file if not done previously, and run `omxplayer` with
+the argument `-o hdmi` to direct the audio to the TV speakers.
+
+    curl -O https://raw.githubusercontent.com/tschaffter/raspberry-pi-htpc/master/audio/example.mp3
+    omxplayer -o hdmi example.mp3
+
+### Install PulseAudio
+
 
 
 
@@ -173,6 +213,10 @@ turn solid blue for the first PS4 controller connect, red for the second, etc.
 ![steamlink_controllers_list](pictures/steamlink_controllers_list.png)
 
 <!--   
+
+
+Audio lag in HDMI is fairly common, but the causes are typically either video processing delay (which actually causes the video to lag, not the audio), or a sync problem in the case of video broadcasts.
+
 
 
 On your host computer, find the audio playback settings and change your playback sample rate.
@@ -251,3 +295,5 @@ codafog/kodi-rpi: not updated in 3 years + error
 [Steam Link for Raspberry Pi]: https://support.steampowered.com/kb_article.php?ref=6153-IFGH-6589
 [Cuphead]: https://store.steampowered.com/app/268910/Cuphead/
 [xpadneo]: https://github.com/atar-axis/xpadneo
+[Omxplayer]: https://www.raspberrypi.org/documentation/raspbian/applications/omxplayer.md
+[uhdmi_hdmi_cable]: https://www.amazon.com/gp/product/B014I8U6N0
