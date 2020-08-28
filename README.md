@@ -163,7 +163,7 @@ turn solid blue for the first PS4 controller connect, red for the second, etc.
         Testing ... (interrupt to exit)
         Axes:  0:     0  1:     0  2:     0  3:     0  4:-32767  5:-32767  6:     0  7:     0 Buttons:  0:on   1:off  2:off  3:off  4:off  5:off  6:off  7:off  8:off  9:off 10:off 11:off 12:off 13:off 14:off sad
 
-## Configure the audio
+## Configure Audio
 
 <!-- markdownlint-disable MD024 -->
 ### Hardware
@@ -203,10 +203,27 @@ the argument `-o hdmi` to direct the audio to the TV speakers.
     curl -O https://raw.githubusercontent.com/tschaffter/raspberry-pi-htpc/master/audio/example.mp3
     omxplayer -o hdmi example.mp3
 
+TODO: if audio does not go through: https://www.raspberrypi.org/documentation/configuration/audio-config.md
+https://www.raspberrypi.org/documentation/usage/audio/
+
 ### Install PulseAudio
 
 
+## Configure Video
 
+### Set gpu_mem
+
+Specifies how much memory, in megabytes, to reserve for the exclusive use of the
+GPU on Raspberry Pi 1-3. The remaining memory is allocated to the ARM CPU. On the
+Raspberry Pi 4 the 3D component of the GPU has its own memory management unit
+(MMU), and does not use memory from the gpu_mem allocation. Instead memory is
+allocated dynamically within Linux. This may allow a smaller value to be specified
+for gpu_mem on the Pi 4, compared to previous models.
+
+On Raspberry Pi 1 to 3, set the value of `gpu_mem` in `/boot/config.txt` up to
+the value listed on this page that depends on the total RAM available on the Pi.
+
+### Increase
 
 ## Steam Link
 
