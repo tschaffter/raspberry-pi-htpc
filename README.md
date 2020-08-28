@@ -223,6 +223,22 @@ for gpu_mem on the Pi 4, compared to previous models.
 On Raspberry Pi 1 to 3, set the value of `gpu_mem` in `/boot/config.txt` up to
 the value listed on this page that depends on the total RAM available on the Pi.
 
+### Remove the black border from the display
+
+If a black border of visible pixel surrounds the video content, the solution could
+be to turn off the overscan. Try setting the value `disable_overscan=1` in
+`/boot/config.txt`. If this does not solve the issues, try setting the following
+values manually:
+
+    overscan_left=16
+    overscan_right=16
+    overscan_top=16
+    overscan_bottom=16
+
+### Monitor GPU usage
+
+
+
 ### Increase
 
 ## Steam Link
