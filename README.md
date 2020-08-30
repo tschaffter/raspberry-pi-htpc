@@ -163,6 +163,65 @@ turn solid blue for the first PS4 controller connect, red for the second, etc.
         Testing ... (interrupt to exit)
         Axes:  0:     0  1:     0  2:     0  3:     0  4:-32767  5:-32767  6:     0  7:     0 Buttons:  0:on   1:off  2:off  3:off  4:off  5:off  6:off  7:off  8:off  9:off 10:off 11:off 12:off 13:off 14:off sad
 
+## Connect a wireless keyboard
+
+It is strongly recommended to connect a wireless keyboard to our Raspberry Pi HTPC
+so that we can interact with unexpected graphical prompts or whenever using a
+controller would not result in the best user experience, for example when
+browsing the web using [Steam Link][Steam Link for Raspberry Pi] browser. If you
+have installed Raspberry Pi Desktop to interact with GUI program, having as
+wireless keyboard is a must-have!
+
+A keyboard that works out of the box is the [Logitech Wireless Touch Keyboard K400].
+Simply plug the tiny Logitech Unifying receiver into a USB port and you're ready
+to start browsing or typing.
+
+## Configure Video
+
+### Enable monitor hotplug
+
+It is possible that the display shows No Signal when is has been turned on after
+the Raspberry Pi has boot up.
+
+A solution is to set `hdmi_force_hotplug=1` in `/boot/config.txt`. What this
+change effectively does is that the HDMI output mode will be used, even if no
+HDMI monitor is detected. To test this solution, turn off the monitor and
+restart the Pi with `sudo reboot`. Wait a couple of minutes then turn on your
+monitor to check that it receives signal.
+
+
+
+
+
+### Remove the black border from the display
+
+If a black border of visible pixel surrounds the video content, the solution could
+be to turn off the overscan. Try setting the value `disable_overscan=1` in
+`/boot/config.txt`. If this does not solve the issues, try setting the following
+values manually:
+
+    overscan_left=16
+    overscan_right=16
+    overscan_top=16
+    overscan_bottom=16
+
+### Set gpu_mem
+
+Specifies how much memory, in megabytes, to reserve for the exclusive use of the
+GPU on Raspberry Pi 1-3. The remaining memory is allocated to the ARM CPU. On the
+Raspberry Pi 4 the 3D component of the GPU has its own memory management unit
+(MMU), and does not use memory from the gpu_mem allocation. Instead memory is
+allocated dynamically within Linux. This may allow a smaller value to be specified
+for gpu_mem on the Pi 4, compared to previous models.
+
+On Raspberry Pi 1 to 3, set the value of `gpu_mem` in `/boot/config.txt` up to
+the value listed on this [page][gpu_mem] that depends on the total RAM available
+on the Pi.
+
+
+
+### Monitor GPU usage
+
 ## Configure Audio
 
 <!-- markdownlint-disable MD024 -->
@@ -208,38 +267,44 @@ https://www.raspberrypi.org/documentation/usage/audio/
 
 ### Install PulseAudio
 
+PulseAudio is a sound system for Linux – this means that it works as a proxy
+between your audio hardware and programs that want to play sounds.
 
-## Configure Video
+## Overclocking
 
-### Set gpu_mem
+### Increase CPU frequency
 
-Specifies how much memory, in megabytes, to reserve for the exclusive use of the
-GPU on Raspberry Pi 1-3. The remaining memory is allocated to the ARM CPU. On the
-Raspberry Pi 4 the 3D component of the GPU has its own memory management unit
-(MMU), and does not use memory from the gpu_mem allocation. Instead memory is
-allocated dynamically within Linux. This may allow a smaller value to be specified
-for gpu_mem on the Pi 4, compared to previous models.
+Checking the default speed of CPU:
 
-On Raspberry Pi 1 to 3, set the value of `gpu_mem` in `/boot/config.txt` up to
-the value listed on this page that depends on the total RAM available on the Pi.
+    $ cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+    600000
 
-### Remove the black border from the display
+Chances are you’ll receive 600000 back from the serial terminal, which would indicate your Pi 4 CPU base speed is 600MHz
 
-If a black border of visible pixel surrounds the video content, the solution could
-be to turn off the overscan. Try setting the value `disable_overscan=1` in
-`/boot/config.txt`. If this does not solve the issues, try setting the following
-values manually:
+watch -n 1 vcgencmd measure_clock arm
 
-    overscan_left=16
-    overscan_right=16
-    overscan_top=16
-    overscan_bottom=16
+> NOTE: Do note that from testing, some Raspberry Pi 4 boards have failed to boot at this speed or slowed down due to overheating/undervoltage. It’s unlikely for you to maintain your Pi 4 board at this max speed in the long run, hence we recommend you to settle for arm_freq=2000 or stop at step 5.
 
-### Monitor GPU usage
+See yellow settings in:
+https://miguelangelantolin.com/raspberry-pi-4b-overclock/
+
+sysbench --test=cpu --cpu-max-prime=20000 --num-threads=4 run
+
+https://retropie.org.uk/forum/topic/27430/howto-optimized-boot-config-txt
 
 
+From https://www.raspberrypi.org/forums/viewtopic.php?t=283911&p=1718846:
+#over_voltage=2
+#arm_freq=1800
 
-### Increase
+over_voltage=5
+arm_freq=2000
+
+#over_voltage=6
+#arm_freq=2100
+
+$ vcgencmd measure_volts core
+volt=0.8350V
 
 ## Steam Link
 
@@ -325,8 +390,11 @@ codafog/kodi-rpi: not updated in 3 years + error
 
 [Xbox Wireless Controller]: https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller
 [PS4 Controller]: https://www.playstation.com/en-us/explore/accessories/gaming-controllers/
-[Steam Link for Raspberry Pi]: https://support.steampowered.com/kb_article.php?ref=6153-IFGH-6589
+[Steam Link for Raspberry Pi]: https://support.steampowered.com/kb_article.php?ref=6153-IFGH-6589s
 [Cuphead]: https://store.steampowered.com/app/268910/Cuphead/
 [xpadneo]: https://github.com/atar-axis/xpadneo
 [Omxplayer]: https://www.raspberrypi.org/documentation/raspbian/applications/omxplayer.md
 [uhdmi_hdmi_cable]: https://www.amazon.com/gp/product/B014I8U6N0
+[gpu_mem]: https://www.raspberrypi.org/documentation/configuration/config-txt/memory.md
+[Kodi]: https://kodi.tv/
+[Logitech Wireless Touch Keyboard K400]: https://www.logitech.com/en-us/product/wireless-touch-keyboard-k400r
