@@ -189,9 +189,11 @@ HDMI monitor is detected. To test this solution, turn off the monitor and
 restart the Pi with `sudo reboot`. Wait a couple of minutes then turn on your
 monitor to check that it receives signal.
 
-
-
-
+A potential problem that occurs when the Raspberry Pi is turned on and the
+monitor is off when `hdmi_force_hotplug=1` is that the Pi is unable to identify
+the resolutions supported by the monitor. In this case, the Pi will settle for a
+low resolution like 640x480. A solution to this problem is to specify the
+resolution that the Pi should use at startup (see below).
 
 ### Remove the black border from the display
 
