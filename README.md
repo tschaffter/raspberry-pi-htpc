@@ -82,13 +82,14 @@ of all the options available.
     agent on
     scan on
 
-We should start seeing an output similar to this one:
+We should start seeing an output similar to the one below. The MAC addresses
+featured in this guide have been replaced by random values for security reason.
 
     [bluetooth]# scan on
     Discovery started
-    [CHG] Controller DC:A6:32:05:7F:06 Discovering: yes
-    [NEW] Device 51:B8:16:6A:6F:C6 51-B8-16-6A-6F-C6
-    [NEW] Device 40:23:43:3F:4E:58 BRAVIA 4K UR2
+    [CHG] Controller C6:DA:27:5F:11:95 Discovering: yes
+    [NEW] Device 4F:C3:E7:40:98:6F 4F:C3:E7:40:98:6F
+    [NEW] Device 54:E8:75:3B:CB:F7 BRAVIA 4K UR2
 
 The "Controller" prefix refers to the Raspberry Pi itself. "Devices" correspond
 to the devices detected by the Raspberry Pi. From now on, we save the term
@@ -175,6 +176,22 @@ wireless keyboard is a must-have!
 A keyboard that works out of the box is the [Logitech Wireless Touch Keyboard K400].
 Simply plug the tiny Logitech Unifying receiver into a USB port and you're ready
 to start browsing or typing.
+
+### Change keyboard layout to US from default British layout
+
+The default keyboard layout on Raspberry Pi OS is a British layout. When using
+the keyboard K400 with US layout, this configuration makes it difficult to enter
+the backslash and vertical bar (pipe) keys. The solution is to change the value
+of the variable `XKBLAYOUT` from `gb` to `us` in `/etc/default/keyboard` before
+restarting the system.
+
+    $ sudo cat /etc/default/keyboard
+    XKBMODEL="pc105"
+    XKBLAYOUT="gb"
+    XKBVARIANT=""
+    XKBOPTIONS=""
+
+    BACKSPACE="guess
 
 ## Configure Video
 
@@ -389,7 +406,7 @@ The same information can be found programmatically using the command below
 Steam Link uses the above link to check if a more recent version than the one
 installed is available. If yes, the latest version is downloaded and installed
 in `~/.local/share/SteamLink/` before being executed. Thus, the initial version
-of Steam Link installed does not matter much. On Raspibian OS, the easiest option
+of Steam Link installed does not matter much. On Raspbian OS, the easiest option
 is to install Steam Link using the package manager. On Linux distrbutions that
 do not provide it as a package, the above command can be used to download and
 install the latest version of Steam Link.
@@ -415,12 +432,43 @@ bumping up the version of a similar link found online for `1.0.7`.
             500 http://archive.raspberrypi.org/debian buster/main armhf Packages
 
 Even though the package manager shows that the version installed is `1.0.8`,
-Steam Link will actually run the latest version available (currently `1.1.64.162`).
+Steam Link will actually download and run the latest version available
+(currently `1.1.64.162`).
 
 ### Start Steam Link
 
+Steam Link requires an X server to render the video on the TV. Attempting to
+start Steam Link without an X server would generate the following message.
+
+    $ steamlink
+    * failed to add service - already in use?
+
+The default X server adopted by most Linux distributions, including Raspberry OS
+Desktop, is X.Org Server (X11). We go ahead and install the command `startx`
+from the package `xinit` to launch X11 sessions, as well as the standard terminal
+emulator for the X Window System, `xterm`.
+
+    sudo apt-get install --no-install-recommends xserver-xorg xinit xterm
+
+The command `startx` should not be run with `sudo` for safety reasons, thus
+preventing permission problems that may break the GUI. When using a keyboard
+connected to the Raspberry Pi to interact with the default "physical" terminal
+(`tty1`), we can start an X session as a non-root user with the command `startx`.
+
+The X session should look like a black screen with an instance of the terminal
+`xterm` at the top-right corner of the screen. We can switch between the
+terminals `tty1` to `tty7` by pressing `Ctrl+Alt+F1-F7`. We can then go back to
+the X session attached to `tty1` with the shortcut `Ctrl+Alt+F1`.
 
 
+
+dpkg-reconfigure keyboard-configuration
+105-key UK English
+
+
+    sudo usermod --append --groups tty $(whoami)
+
+sudo apt install xserver-xorg-legacy
 
 
 ![steamlink_controllers_list](pictures/steamlink_controllers_list.png)
@@ -516,3 +564,4 @@ codafog/kodi-rpi: not updated in 3 years + error
 [Video options in config.txt]: https://www.raspberrypi.org/documentation/configuration/config-txt/video.md
 [Steam]: https://store.steampowered.com/about/
 [Steam Link now available on Raspberry Pi]: https://steamcommunity.com/app/353380/discussions/6/2806204039992195182/
+[X server]: https://en.wikipedia.org/wiki/X_server
