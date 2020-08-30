@@ -195,6 +195,38 @@ the resolutions supported by the monitor. In this case, the Pi will settle for a
 low resolution like 640x480. A solution to this problem is to specify the
 resolution that the Pi should use at startup (see below).
 
+### Specify the default screen resolution
+
+The easiest solution to set the default screen resolution that the Raspberry Pi
+must use among the resolutions supported by the TV is to use `sudo raspi-config`
+\> `Advanced Options` > `Resolution`. The resolutions listed depends on whether
+the TV was connected at startup. For example, the resolution 4kp60Hz will only
+be listed if the TV supports it and was turned up at startup.
+
+> Raspberry 4B: The Raspberry Pi HDMI port adjacent to the USB-C power input
+(labelled HDMI0) is the only port that supports 4K with a 60Hz refresh rate. If
+both ports are used, their resolution is limited to 1080p @ 30Hz.
+
+Alternatively, use the following commands to identify the acceptedd values for
+`hdmi_group` and `hdmi_mode` before specifying them in `/boot/config.txt`
+
+To show the current resolution:
+
+    $ /opt/vc/bin/tvservice -s
+    state 0x6 [DVI CUSTOM RGB full 16:9], 1920x1080 @ 60.00Hz, progressive
+
+To show the resolution accepted (CEAs: TVs, DMTs: monitors):
+
+    $ /opt/vc/bin/tvservice -m CEAs
+    Group CEA has 4 modes:
+           mode 4: 1280x720 @ 60Hz 16:9, clock:74MHz progressive
+    (prefer) mode 16: 1920x1080 @ 60Hz 16:9, clock:148MHz progressive
+            mode 95: 3840x2160 @ 30Hz 16:9, clock:297MHz progressive
+            mode 97: 3840x2160 @ 60Hz 16:9, clock:594MHz progressive
+
+See [Video options in config.txt] for more information on the Raspberry Pi
+video options.
+
 ### Remove the black border from the display
 
 If a black border of visible pixel surrounds the video content, the solution could
@@ -400,3 +432,4 @@ codafog/kodi-rpi: not updated in 3 years + error
 [gpu_mem]: https://www.raspberrypi.org/documentation/configuration/config-txt/memory.md
 [Kodi]: https://kodi.tv/
 [Logitech Wireless Touch Keyboard K400]: https://www.logitech.com/en-us/product/wireless-touch-keyboard-k400r
+[Video options in config.txt]: https://www.raspberrypi.org/documentation/configuration/config-txt/video.md
