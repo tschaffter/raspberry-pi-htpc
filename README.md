@@ -399,7 +399,8 @@ beta version. Alternatively, the beta version of Steam Link can be activated
 after launching its stable (publlic) version.
 
 On Debian-based distributions, there is a more recent package available
-than the one provided by (Raspbian OS) package manager.
+than the one provided by (Raspbian OS) package manager. This link was found by
+bumping up the version of a similar link found online for `1.0.7`.
 
     $ curl -Os http://media.steampowered.com/steamlink/rpi/steamlink_1.0.8_armhf.deb
     $ sudo apt install steamlink_1.0.8_armhf.deb
