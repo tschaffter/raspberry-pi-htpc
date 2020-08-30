@@ -73,7 +73,7 @@ command below to permanently disable ERTM starting from the next reboot.
 
 Enter the following command on the Raspberry Pi to run `bluetoothctl`.
 
-    bluetoothctl
+    sudo bluetoothctl
 
 Now that we are in the Bluetooth command-line tool, we need to go ahead and turn
 the agent as well as start scanning for other devices. Enter `help` for a list
@@ -347,6 +347,26 @@ volt=0.8350V
 
 ## Steam Link
 
+### Configure the Host
+
+The term "host" refers to the computer that is running [Steam] and streaming the
+video and audio to the Raspberry Pi. In this guide, the host is a computer running
+Windows 10, however any OS that supports [Steam] should work.
+
+For optimal performance, we connect the host to the router/switch using a Cat 6
+ethernet cable. Cat-6 cables have a data transfer rate of 1 gigabits per second
+(Gb/s). This is more than enough to stream GAME_NAME at RESOLUTION @ 60Hz.
+
+We just have to start Steam on the host and we are good to go.
+
+### Install Steam Link on the Raspberry Pi 4
+
+We are going to install [Steam Link] on the Raspberry Pi, which will later
+connect to the computer running [Steam] (host).
+
+
+
+
 ![steamlink_controllers_list](pictures/steamlink_controllers_list.png)
 
 <!--   
@@ -438,3 +458,4 @@ codafog/kodi-rpi: not updated in 3 years + error
 [Kodi]: https://kodi.tv/
 [Logitech Wireless Touch Keyboard K400]: https://www.logitech.com/en-us/product/wireless-touch-keyboard-k400r
 [Video options in config.txt]: https://www.raspberrypi.org/documentation/configuration/config-txt/video.md
+[Steam]: https://store.steampowered.com/about/
