@@ -215,7 +215,7 @@ To show the current resolution:
     $ /opt/vc/bin/tvservice -s
     state 0x6 [DVI CUSTOM RGB full 16:9], 1920x1080 @ 60.00Hz, progressive
 
-To show the resolution accepted (CEAs: TVs, DMTs: monitors):
+To show the resolution accepted (`CEAs`: TVs, `DMTs`: monitors):
 
     $ /opt/vc/bin/tvservice -m CEAs
     Group CEA has 4 modes:
@@ -241,20 +241,25 @@ values manually:
 
 ### Set gpu_mem
 
-Specifies how much memory, in megabytes, to reserve for the exclusive use of the
-GPU on Raspberry Pi 1-3. The remaining memory is allocated to the ARM CPU. On the
-Raspberry Pi 4 the 3D component of the GPU has its own memory management unit
-(MMU), and does not use memory from the gpu_mem allocation. Instead memory is
-allocated dynamically within Linux. This may allow a smaller value to be specified
-for gpu_mem on the Pi 4, compared to previous models.
+The Raspberry Pi allows us to specify how much memory, in megabytes, to reserve
+for the exclusive use of the GPU on Raspberry Pi 1-3. The remaining memory iss
+allocated to the ARM CPU. On the Raspberry Pi 4 the 3D component of the GPU has
+its own memory management unit (MMU), and does not use memory from the gpu_mem
+allocation. Instead memory is allocated dynamically within Linux. This may allow
+a smaller value to be specified for gpu_mem on the Pi 4, compared to previous
+models.
 
-On Raspberry Pi 1 to 3, set the value of `gpu_mem` in `/boot/config.txt` up to
-the value listed on this [page][gpu_mem] that depends on the total RAM available
-on the Pi.
+On Raspberry Pi 1 to 3, we would set the value of `gpu_mem` in `/boot/config.txt`
+up to the value listed on the page below that depends on the total RAM available
+on the Pi. According to this page, the Raspberry Pi 4 does not rely on `gpu_mem`
+so there is no need to set it.
 
-
+See [Memory options in config.txt] for more information on the Raspberry Pi
+CPU and GPU options.
 
 ### Monitor GPU usage
+
+TODO
 
 ## Configure Audio
 
@@ -429,7 +434,7 @@ codafog/kodi-rpi: not updated in 3 years + error
 [xpadneo]: https://github.com/atar-axis/xpadneo
 [Omxplayer]: https://www.raspberrypi.org/documentation/raspbian/applications/omxplayer.md
 [uhdmi_hdmi_cable]: https://www.amazon.com/gp/product/B014I8U6N0
-[gpu_mem]: https://www.raspberrypi.org/documentation/configuration/config-txt/memory.md
+[Memory options in config.txt]: https://www.raspberrypi.org/documentation/configuration/config-txt/memory.md
 [Kodi]: https://kodi.tv/
 [Logitech Wireless Touch Keyboard K400]: https://www.logitech.com/en-us/product/wireless-touch-keyboard-k400r
 [Video options in config.txt]: https://www.raspberrypi.org/documentation/configuration/config-txt/video.md
