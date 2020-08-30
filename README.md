@@ -1,5 +1,10 @@
 # HTPC
 
+## Set the hostname
+
+Set the content of the file `/etc/hostname` to `htpc`. Restart the Raspberry Pi
+to apply the change.
+
 ## Configure bluetooth controllers
 
 ### Hardware
@@ -157,6 +162,7 @@ turn solid blue for the first PS4 controller connect, red for the second, etc.
   connect. Once we have identified the handler of the controller that we want to
   test, we can start `jstest`. For example:
 
+        $ sudo apt install -y joystick
         $ jstest --normal /dev/input/js0
         Driver version is 2.1.0.
         Joystick (Xbox Wireless Controller) has 8 axes (X, Y, Z, Rz, Gas, Brake, Hat0X, Hat0Y)
@@ -470,6 +476,11 @@ The first line shows that an X session (`/usr/lib/xorg/Xorg`) is attached to the
 terminal `tty1`. The second line refers to the SSH terminal (`pts/1`) that we
 are using to run the above command.
 
+This command lists only the process IDs of Xorg sessions:
+
+    $ pgrep Xorg
+    1027
+
 The X session that we have started can be stopped with `kill <pid>` where `<pid>`
 is the process ID of the session listed by `ps aux | grep Xorg`. Here, we would
 run `kill 1027` to stop the X session.
@@ -509,7 +520,41 @@ image processing suite `imagemagick`.
     DISPLAY=:0 xwd -root -out screenshot.xwd
     convert screenshot.xwd screenshot.png
 
-### Plop
+### XXX
+
+/etc/udev/rules.d/60-steam-controller-perms.rules
+
+https://steamcommunity.com/app/353370/discussions/2/1735465524711324558/
+
+
+### Create Steam Link service
+
+    $ sudo vim /etc/systemd/system/steamlink.service
+    $ cat /etc/systemd/system/steamlink.service
+    [Unit]
+    Description=Start Steam Link
+
+    [Service]
+    Type=simple
+    User=tschaffter
+    ExecStart=/usr/bin/steamlink
+    #Restart=always
+    Restart=on-failure
+
+    [Install]
+    WantedBy=graphical.target
+    #WantedBy=multi-user.target
+
+Enable the service:
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable steamlink.service
+
+
+
+sudo apt install -y blackbox
+
+
 
 The special argument "--" marks the end of client arguments and the beginning of server options.
 
