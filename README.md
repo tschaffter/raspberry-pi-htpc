@@ -460,10 +460,34 @@ The X session should look like a black screen with an instance of the terminal
 terminals `tty1` to `tty7` by pressing `Ctrl+Alt+F1-F7`. We can then go back to
 the X session attached to `tty1` with the shortcut `Ctrl+Alt+F1`.
 
+From a terminal, we can list the processes related to Xorg:
+
+    $ ps aux | grep Xorg
+    tschaff+  1027  0.1  1.1 122432 43984 tty1     Sl   18:44   0:00 /usr/lib/xorg/Xorg -nolisten tcp :0 vt1 -keeptty -auth /tmp/serverauth.tsUxEiGH6h
+    tschaff+  1104  0.0  0.0   7348   548 pts/1    S+   18:52   0:00 grep --color=auto Xorg
+
+The first line shows that an X session (`/usr/lib/xorg/Xorg`) is attached to the
+terminal `tty1`. The second line refers to the SSH terminal (`pts/1`) that wes
+are using to run the above command.
+
+The X session that we have started can be stopped with `kill <pid>` where `<pid>`
+is the process ID of the session listed by `ps aux | grep Xorg`. Here, we would
+run `kill 1027` to stop the X session.
+
+By default a non-root user is not authorized to start an X session from an SSH
+terminal. Adding the non-root user to the group `tty` and `video` solves some of
+the error messages but not all of them. The easiest solution found is to install
+enable any user to start an X session in the file `/etc/X11/Xwrapper.config`
+provided by the package `xserver-xorg-legacy`.
+
+    $ sudo apt install -y xserver-xorg-legacy
+    $ cat /etc/X11/Xwrapper.config
+    allowed_users=anybody
+
+We can now run `startx` as a non-root user from an SSH terminal.
 
 
-dpkg-reconfigure keyboard-configuration
-105-key UK English
+
 
 
     sudo usermod --append --groups tty $(whoami)
