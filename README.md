@@ -467,7 +467,7 @@ From a terminal, we can list the processes related to Xorg:
     tschaff+  1104  0.0  0.0   7348   548 pts/1    S+   18:52   0:00 grep --color=auto Xorg
 
 The first line shows that an X session (`/usr/lib/xorg/Xorg`) is attached to the
-terminal `tty1`. The second line refers to the SSH terminal (`pts/1`) that wes
+terminal `tty1`. The second line refers to the SSH terminal (`pts/1`) that we
 are using to run the above command.
 
 The X session that we have started can be stopped with `kill <pid>` where `<pid>`
@@ -486,13 +486,36 @@ provided by the package `xserver-xorg-legacy`.
 
 We can now run `startx` as a non-root user from an SSH terminal.
 
+### Start Steam Links
 
+Run the command below to start Steam Link:
 
+    startx steamlink
 
+We should then be greeted with the Welcome screen:
 
-    sudo usermod --append --groups tty $(whoami)
+![steamlink_welcome](pictures/steamlink_welcome.png)
 
-sudo apt install xserver-xorg-legacy
+### Taking a screenshot using `xwd`
+
+To illustrate this guide, we need to take screenshots of X sessions. The
+command-line program `xwd` from the package `x11-apps` enables us to dump an
+image of an X window as an .xwd image. The command `convert` from the open-source
+image processing suite `imagemagick`.
+
+    sudo apt install -y x11-apps
+    sudo apt install -y --no-install-recommends imagemagick
+
+    DISPLAY=:0 xwd -root -out screenshot.xwd
+    convert screenshot.xwd screenshot.png
+
+### Plop
+
+The special argument "--" marks the end of client arguments and the beginning of server options.
+
+DISPLAY=:0.0 startx
+
+sudo usermod --append --groups tty $(whoami)
 
 
 ![steamlink_controllers_list](pictures/steamlink_controllers_list.png)
