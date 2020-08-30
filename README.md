@@ -359,10 +359,65 @@ ethernet cable. Cat-6 cables have a data transfer rate of 1 gigabits per second
 
 We just have to start Steam on the host and we are good to go.
 
-### Install Steam Link on the Raspberry Pi 4
+### Install Steam Link on the Raspberry Pi
 
 We are going to install [Steam Link] on the Raspberry Pi, which will later
 connect to the computer running [Steam] (host).
+
+The easiest way to install Steam Link on Raspberry OS is to use the package
+manager. However, keep reading to learn about alternative options.
+
+Using Raspberry OS package manager:
+
+    $ apt-cache policy steamlink
+    steamlink:
+    Installed: (none)
+    Candidate: 1.0.7
+    Version table:
+        1.0.7 500
+            500 http://archive.raspberrypi.org/debian buster/main armhf Packages
+    $ sudo apt install -y steamlink
+
+As of August 29, 2020, the latest version of Steam Link on Raspberry Pi is
+`1.1.64.162` as advertised on the top of a pinned post on the [official Steam
+Link discussion board](https://steamcommunity.com/app/353380/discussions/6/).
+The same information can be found programmatically using the command below
+
+    $ curl -Ls http://media.steampowered.com/steamlink/rpi/public_build.txt
+    http://media.steampowered.com/steamlink/rpi/steamlink-rpi3-1.1.64.162.tar.gz
+
+Steam Link uses the above link to check if a more recent version than the one
+installed is available. If yes, the latest version is downloaded and installed
+in `~/.local/share/SteamLink/` before being executed. Thus, the initial version
+of Steam Link installed does not matter much. On Raspibian OS, the easiest option
+is to install Steam Link using the package manager. On Linux distrbutions that
+do not provide it as a package, the above command can be used to download and
+install the latest version of Steam Link.
+
+> Note: `public_build.txt` can be replaced by `beta_build.txt` to access the
+beta version. Alternatively, the beta version of Steam Link can be activated
+after launching its stable (publlic) version.
+
+On Debian-based distributions, there is a more recent package available
+than the one provided by (Raspbian OS) package manager.
+
+    $ curl -Os http://media.steampowered.com/steamlink/rpi/steamlink_1.0.8_armhf.deb
+    $ sudo apt install steamlink_1.0.8_armhf.deb
+    $ apt-cache policy steamlink
+    steamlink:
+    Installed: 1.0.8
+    Candidate: 1.0.8
+    Version table:
+    *** 1.0.8 100
+            100 /var/lib/dpkg/status
+        1.0.7 500
+            500 http://archive.raspberrypi.org/debian buster/main armhf Packages
+
+Even though the package manager shows that the version installed is `1.0.8`,
+Steam Link will actually run the latest version available (currently `1.1.64.162`).
+
+### Start Steam Link
+
 
 
 
@@ -459,3 +514,4 @@ codafog/kodi-rpi: not updated in 3 years + error
 [Logitech Wireless Touch Keyboard K400]: https://www.logitech.com/en-us/product/wireless-touch-keyboard-k400r
 [Video options in config.txt]: https://www.raspberrypi.org/documentation/configuration/config-txt/video.md
 [Steam]: https://store.steampowered.com/about/
+[Steam Link now available on Raspberry Pi]: https://steamcommunity.com/app/353380/discussions/6/2806204039992195182/
