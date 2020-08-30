@@ -504,7 +504,7 @@ codafog/kodi-rpi: not updated in 3 years + error
 
 [Xbox Wireless Controller]: https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller
 [PS4 Controller]: https://www.playstation.com/en-us/explore/accessories/gaming-controllers/
-[Steam Link for Raspberry Pi]: https://support.steampowered.com/kb_article.php?ref=6153-IFGH-6589s
+[Steam Link for Raspberry Pi]: https://support.steampowered.com/kb_article.php?ref=6153-IFGH-6589
 [Cuphead]: https://store.steampowered.com/app/268910/Cuphead/
 [xpadneo]: https://github.com/atar-axis/xpadneo
 [Omxplayer]: https://www.raspberrypi.org/documentation/raspbian/applications/omxplayer.md
