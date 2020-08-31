@@ -497,17 +497,28 @@ provided by the package `xserver-xorg-legacy`.
 
 We can now run `startx` as a non-root user from an SSH terminal.
 
-### Start Steam Links
+### Enable the user to access video devices
 
-Run the command below to start Steam Link:
+The user running Steam Link must be added to the group `video`, otherwise Steam
+Link will fail to connect to the computer running Steam.
+
+    $ sudo usermod --append --groups video $(whoami)
+    $ groups
+    tschaffter sudo video plugdev input
+
+### Start Steam Link manually
+
+Run the command below to start Steam Link manually.
 
     startx steamlink
 
-We should then be greeted with the Welcome screen:
+We should then be greeted with Steam Link Welcome screen. If the wireless
+controller does not work on this screen, use a wireless keyboard or wait until
+we configure Steam Link to start using the X window manager `Openbox`.
 
 ![steamlink_welcome](pictures/steamlink_welcome.png)
 
-### Taking a screenshot using `xwd`
+### Taking a screenshot using Xwd
 
 To illustrate this guide, we need to take screenshots of X sessions. The
 command-line program `xwd` from the package `x11-apps` enables us to dump an
@@ -520,11 +531,37 @@ image processing suite `imagemagick`.
     DISPLAY=:0 xwd -root -out screenshot.xwd
     convert screenshot.xwd screenshot.png
 
-### XXX
+### Start Steam Link using Openbox
 
-/etc/udev/rules.d/60-steam-controller-perms.rules
+Running Steam Link manually with `startx steamlink` revealed the following issues:
 
-https://steamcommunity.com/app/353370/discussions/2/1735465524711324558/
+1. The wireless controller may or may not work
+2. The screen is blanking after some time
+3. No audio
+
+We solve the above two issues by using the X window manager [Openbox]. We will
+add audio support to Steam Link later in this guide.
+
+    sudo apt install --no-install-recommends openbox
+
+Then, we add the following content to the file `/etc/xdg/openbox/autostart`.
+
+    # Disable any form of screen saver / screen blanking / power management
+    xset s off
+    xset s noblank
+    xset -dpms
+
+    # Allow quitting the X server with CTRL-ATL-Backspace
+    setxkbmap -option terminate:ctrl_alt_bksp
+
+    # Start Steam Link
+    steamlink
+
+Running `startx` now starts Steam Link using Openbox. The first options specified
+in the file above disable any form of screen saver, screen blanking and power
+management. The inputs from the wireless controller are now fully captured by
+Steam Link thanks to Openbox loading the required input drivers.
+
 
 
 ### Create Steam Link service
@@ -551,8 +588,9 @@ Enable the service:
     sudo systemctl enable steamlink.service
 
 
+### Install openbox
 
-sudo apt install -y blackbox
+
 
 
 
@@ -560,7 +598,7 @@ The special argument "--" marks the end of client arguments and the beginning of
 
 DISPLAY=:0.0 startx
 
-sudo usermod --append --groups tty $(whoami)
+
 
 
 ![steamlink_controllers_list](pictures/steamlink_controllers_list.png)
@@ -657,3 +695,4 @@ codafog/kodi-rpi: not updated in 3 years + error
 [Steam]: https://store.steampowered.com/about/
 [Steam Link now available on Raspberry Pi]: https://steamcommunity.com/app/353380/discussions/6/2806204039992195182/
 [X server]: https://en.wikipedia.org/wiki/X_server
+[Openbox]: https://wiki.debian.org/Openbox
