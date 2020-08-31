@@ -506,15 +506,15 @@ Link will fail to connect to the computer running Steam.
     $ groups
     tschaffter sudo video plugdev input
 
-### Start Steam Link manually
+### Start Steam Link manually (early test)
 
 Run the command below to start Steam Link manually.
 
     startx steamlink
 
 We should then be greeted with Steam Link Welcome screen. If the wireless
-controller does not work on this screen, use a wireless keyboard or wait until
-we configure Steam Link to start using the X window manager `Openbox`.
+controller does not work on this screen, wait until we create a systemd service
+to start Steam Link using the X window manager `Openbox`.
 
 ![steamlink_welcome](pictures/steamlink_welcome.png)
 
@@ -562,41 +562,43 @@ in the file above disable any form of screen saver, screen blanking and power
 management. The inputs from the wireless controller are now fully captured by
 Steam Link thanks to Openbox loading the required input drivers.
 
-
-
 ### Create Steam Link service
 
-    $ sudo vim /etc/systemd/system/steamlink.service
-    $ cat /etc/systemd/system/steamlink.service
+Creating a systemd service for Steam Link is a great way to start, stop and get
+the status of Steam Link, get access to the log, and enable Steam Link to start
+at boot. First, we create the file `/etc/systemd/system/steamlink.service` with
+the following content. Update the value of `User` with the name of a user who is
+a member of the groups `input`, `video` and `audio`.
+
     [Unit]
     Description=Start Steam Link
+    After=network.target
 
     [Service]
     Type=simple
     User=tschaffter
-    ExecStart=/usr/bin/steamlink
+    ExecStart=startx
     #Restart=always
     Restart=on-failure
 
     [Install]
     WantedBy=graphical.target
-    #WantedBy=multi-user.target
 
-Enable the service:
+Enable the service to start automatically at boot:
 
     sudo systemctl daemon-reload
     sudo systemctl enable steamlink.service
 
+Now reboot or start the service with `sudo service steamlink start`.
 
-### Install openbox
-
-
-
+### Add audio support to Steam Link
 
 
-The special argument "--" marks the end of client arguments and the beginning of server options.
 
-DISPLAY=:0.0 startx
+
+
+
+
 
 
 
