@@ -298,8 +298,9 @@ TODO
 
 First we need to check that our audio hardware is functional before moving on with
 the software configuration. For this test, we use the video player [Omxplayer]
-specifically made for the Raspberry Pi's GPU from the Kodi project. Omxplayer
-player is installed by default on Raspbian OS Lite.
+specifically made for the Raspberry Pi's GPU from the Kodi project.
+
+    sudo apt install -y omxplayer
 
 ### Test jack audio output
 
@@ -307,8 +308,11 @@ Connect your speaker or headset to the jack port of the Raspberry Pi. Run the
 following commands to download and play an mp3 sample file with the audio output
 directed to the jack port (`-o local`).
 
-    curl -O https://raw.githubusercontent.com/tschaffter/raspberry-pi-htpc/master/audio/example.mp3
-    omxplayer -o local example.mp3
+    $ curl -O https://raw.githubusercontent.com/tschaffter/raspberry-pi-htpc/master/audio/example.mp3
+    $ omxplayer -o local example.mp3
+    Audio codec mp3float channels 2 samplerate 44100 bitspersample 16
+    Subtitle count: 0, state: off, index: 1, delay: 0
+    have a nice day ;)
 
 ### Test HDMI audio ouput
 
@@ -324,13 +328,34 @@ the argument `-o hdmi` to direct the audio to the TV speakers.
     curl -O https://raw.githubusercontent.com/tschaffter/raspberry-pi-htpc/master/audio/example.mp3
     omxplayer -o hdmi example.mp3
 
-TODO: if audio does not go through: https://www.raspberrypi.org/documentation/configuration/audio-config.md
-https://www.raspberrypi.org/documentation/usage/audio/
-
 ### Install PulseAudio
 
 PulseAudio is a sound system for Linux – this means that it works as a proxy
-between your audio hardware and programs that want to play sounds.
+between your audio hardware and programs that want to play sounds. It just
+happens that Steam Link relies on PulseAudio, so let's install it.
+
+    sudo apt install --no-install-recommends -y pulseaudio
+
+Enable the service `pulseaudio` to start automatically at boot:
+
+    $ systemctl --user enable pulseaudio
+    Created symlink /home/tschaffter/.config/systemd/user/default.target.wants/pulseaudio.service → /usr/lib/systemd/user/pulseaudio.service.
+    Created symlink /home/tschaffter/.config/systemd/user/sockets.target.wants/pulseaudio.socket → /usr/lib/systemd/user/pulseaudio.socket.
+
+Run the commands below to start the service immediately:
+
+    $ systemctl start --user pulseaudio
+    $ systemctl status --user pulseaudio
+    ● pulseaudio.service - Sound Service
+      Loaded: loaded (/usr/lib/systemd/user/pulseaudio.service; enabled; vendor preset: enabled)
+      Active: active (running) since Mon 2020-08-31 03:25:40 BST; 1s ago
+    Main PID: 2193 (pulseaudio)
+      CGroup: /user.slice/user-1001.slice/user@1001.service/pulseaudio.service
+              └─2193 /usr/bin/pulseaudio --daemonize=no
+
+### Test PulseAudio
+
+
 
 ## Overclocking
 
@@ -590,7 +615,7 @@ Enable the service to start automatically at boot:
 
 Now reboot or start the service with `sudo service steamlink start`.
 
-### Add audio support to Steam Link
+<!-- ### Add audio support to Steam Link -->
 
 
 
