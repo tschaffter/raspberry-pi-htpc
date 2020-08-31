@@ -1,5 +1,10 @@
 # HTPC
 
+## Set the hostname
+
+Set the content of the file `/etc/hostname` to `htpc`. Restart the Raspberry Pi
+to apply the change.
+
 ## Configure bluetooth controllers
 
 ### Hardware
@@ -157,6 +162,7 @@ turn solid blue for the first PS4 controller connect, red for the second, etc.
   connect. Once we have identified the handler of the controller that we want to
   test, we can start `jstest`. For example:
 
+        $ sudo apt install -y joystick
         $ jstest --normal /dev/input/js0
         Driver version is 2.1.0.
         Joystick (Xbox Wireless Controller) has 8 axes (X, Y, Z, Rz, Gas, Brake, Hat0X, Hat0Y)
@@ -292,8 +298,9 @@ TODO
 
 First we need to check that our audio hardware is functional before moving on with
 the software configuration. For this test, we use the video player [Omxplayer]
-specifically made for the Raspberry Pi's GPU from the Kodi project. Omxplayer
-player is installed by default on Raspbian OS Lite.
+specifically made for the Raspberry Pi's GPU from the Kodi project.
+
+    sudo apt install -y omxplayer
 
 ### Test jack audio output
 
@@ -301,8 +308,11 @@ Connect your speaker or headset to the jack port of the Raspberry Pi. Run the
 following commands to download and play an mp3 sample file with the audio output
 directed to the jack port (`-o local`).
 
-    curl -O https://raw.githubusercontent.com/tschaffter/raspberry-pi-htpc/master/audio/example.mp3
-    omxplayer -o local example.mp3
+    $ curl -O https://raw.githubusercontent.com/tschaffter/raspberry-pi-htpc/master/audio/example.mp3
+    $ omxplayer -o local example.mp3
+    Audio codec mp3float channels 2 samplerate 44100 bitspersample 16
+    Subtitle count: 0, state: off, index: 1, delay: 0
+    have a nice day ;)
 
 ### Test HDMI audio ouput
 
@@ -318,13 +328,34 @@ the argument `-o hdmi` to direct the audio to the TV speakers.
     curl -O https://raw.githubusercontent.com/tschaffter/raspberry-pi-htpc/master/audio/example.mp3
     omxplayer -o hdmi example.mp3
 
-TODO: if audio does not go through: https://www.raspberrypi.org/documentation/configuration/audio-config.md
-https://www.raspberrypi.org/documentation/usage/audio/
-
 ### Install PulseAudio
 
 PulseAudio is a sound system for Linux – this means that it works as a proxy
-between your audio hardware and programs that want to play sounds.
+between your audio hardware and programs that want to play sounds. It just
+happens that Steam Link relies on PulseAudio, so let's install it.
+
+    sudo apt install --no-install-recommends -y pulseaudio
+
+Enable the service `pulseaudio` to start automatically at boot:
+
+    $ systemctl --user enable pulseaudio
+    Created symlink /home/tschaffter/.config/systemd/user/default.target.wants/pulseaudio.service → /usr/lib/systemd/user/pulseaudio.service.
+    Created symlink /home/tschaffter/.config/systemd/user/sockets.target.wants/pulseaudio.socket → /usr/lib/systemd/user/pulseaudio.socket.
+
+Run the commands below to start the service immediately:
+
+    $ systemctl start --user pulseaudio
+    $ systemctl status --user pulseaudio
+    ● pulseaudio.service - Sound Service
+      Loaded: loaded (/usr/lib/systemd/user/pulseaudio.service; enabled; vendor preset: enabled)
+      Active: active (running) since Mon 2020-08-31 03:25:40 BST; 1s ago
+    Main PID: 2193 (pulseaudio)
+      CGroup: /user.slice/user-1001.slice/user@1001.service/pulseaudio.service
+              └─2193 /usr/bin/pulseaudio --daemonize=no
+
+### Test PulseAudio
+
+
 
 ## Overclocking
 
@@ -362,7 +393,7 @@ arm_freq=2000
 $ vcgencmd measure_volts core
 volt=0.8350V
 
-## Steam Link
+## Install Steam Link
 
 ### Configure the Host
 
@@ -378,11 +409,10 @@ We just have to start Steam on the host and we are good to go.
 
 ### Install Steam Link on the Raspberry Pi
 
-We are going to install [Steam Link] on the Raspberry Pi, which will later
-connect to the computer running [Steam] (host).
-
-The easiest way to install Steam Link on Raspberry OS is to use the package
-manager. However, keep reading to learn about alternative options.
+We are going to install [Steam Link][Steam Link] on the Raspberry Pi, which will
+later connect to the computer running [Steam] (host). The easiest way to install
+Steam Link on Raspberry OS is to use the package manager. However, keep reading
+to learn about alternative options.
 
 Using Raspberry OS package manager:
 
@@ -396,7 +426,7 @@ Using Raspberry OS package manager:
     $ sudo apt install -y steamlink
 
 As of August 29, 2020, the latest version of Steam Link on Raspberry Pi is
-`1.1.64.162` as advertised on the top of a pinned post on the [official Steam
+`1.1.64.162` as advertised at the top of a pinned post on the [official Steam
 Link discussion board](https://steamcommunity.com/app/353380/discussions/6/).
 The same information can be found programmatically using the command below
 
@@ -470,6 +500,11 @@ The first line shows that an X session (`/usr/lib/xorg/Xorg`) is attached to the
 terminal `tty1`. The second line refers to the SSH terminal (`pts/1`) that we
 are using to run the above command.
 
+This command lists only the process IDs of Xorg sessions:
+
+    $ pgrep Xorg
+    1027
+
 The X session that we have started can be stopped with `kill <pid>` where `<pid>`
 is the process ID of the session listed by `ps aux | grep Xorg`. Here, we would
 run `kill 1027` to stop the X session.
@@ -486,17 +521,28 @@ provided by the package `xserver-xorg-legacy`.
 
 We can now run `startx` as a non-root user from an SSH terminal.
 
-### Start Steam Links
+### Enable the user to access video devices
 
-Run the command below to start Steam Link:
+The user running Steam Link must be added to the group `video`, otherwise Steam
+Link will fail to connect to the computer running Steam.
+
+    $ sudo usermod --append --groups video $(whoami)
+    $ groups
+    tschaffter sudo video plugdev input
+
+### Start Steam Link manually (early test)
+
+Run the command below to start Steam Link manually.
 
     startx steamlink
 
-We should then be greeted with the Welcome screen:
+We should then be greeted with Steam Link Welcome screen. If the wireless
+controller does not work on this screen, wait until we create a systemd service
+to start Steam Link using the X window manager `Openbox`.
 
 ![steamlink_welcome](pictures/steamlink_welcome.png)
 
-### Taking a screenshot using `xwd`
+### Taking a screenshot using Xwd
 
 To illustrate this guide, we need to take screenshots of X sessions. The
 command-line program `xwd` from the package `x11-apps` enables us to dump an
@@ -509,13 +555,76 @@ image processing suite `imagemagick`.
     DISPLAY=:0 xwd -root -out screenshot.xwd
     convert screenshot.xwd screenshot.png
 
-### Plop
+### Start Steam Link using Openbox
 
-The special argument "--" marks the end of client arguments and the beginning of server options.
+Running Steam Link manually with `startx steamlink` revealed the following issues:
 
-DISPLAY=:0.0 startx
+1. The wireless controller may or may not work
+2. The screen is blanking after some time
+3. No audio
 
-sudo usermod --append --groups tty $(whoami)
+We solve the above two issues by using the X window manager [Openbox]. We will
+add audio support to Steam Link later in this guide.
+
+    sudo apt install --no-install-recommends openbox
+
+Then, we add the following content to the file `/etc/xdg/openbox/autostart`.
+
+    # Disable any form of screen saver / screen blanking / power management
+    xset s off
+    xset s noblank
+    xset -dpms
+
+    # Allow quitting the X server with CTRL-ATL-Backspace
+    setxkbmap -option terminate:ctrl_alt_bksp
+
+    # Start Steam Link
+    steamlink
+
+Running `startx` now starts Steam Link using Openbox. The first options specified
+in the file above disable any form of screen saver, screen blanking and power
+management. The inputs from the wireless controller are now fully captured by
+Steam Link thanks to Openbox loading the required input drivers.
+
+### Create Steam Link service
+
+Creating a systemd service for Steam Link is a great way to start, stop and get
+the status of Steam Link, get access to the log, and enable Steam Link to start
+at boot. First, we create the file `/etc/systemd/system/steamlink.service` with
+the following content. Update the value of `User` with the name of a user who is
+a member of the groups `input`, `video` and `audio`.
+
+    [Unit]
+    Description=Start Steam Link
+    After=network.target
+
+    [Service]
+    Type=simple
+    User=tschaffter
+    ExecStart=startx
+    #Restart=always
+    Restart=on-failure
+
+    [Install]
+    WantedBy=graphical.target
+
+Enable the service to start automatically at boot:
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable steamlink.service
+
+Now reboot or start the service with `sudo service steamlink start`.
+
+<!-- ### Add audio support to Steam Link -->
+
+
+
+
+
+
+
+
+
 
 
 ![steamlink_controllers_list](pictures/steamlink_controllers_list.png)
@@ -612,3 +721,4 @@ codafog/kodi-rpi: not updated in 3 years + error
 [Steam]: https://store.steampowered.com/about/
 [Steam Link now available on Raspberry Pi]: https://steamcommunity.com/app/353380/discussions/6/2806204039992195182/
 [X server]: https://en.wikipedia.org/wiki/X_server
+[Openbox]: https://wiki.debian.org/Openbox
