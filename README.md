@@ -368,7 +368,7 @@ arm_freq=2000
 $ vcgencmd measure_volts core
 volt=0.8350V
 
-## Steam Link
+## Install Steam Link
 
 ### Configure the Host
 
@@ -384,11 +384,10 @@ We just have to start Steam on the host and we are good to go.
 
 ### Install Steam Link on the Raspberry Pi
 
-We are going to install [Steam Link] on the Raspberry Pi, which will later
-connect to the computer running [Steam] (host).
-
-The easiest way to install Steam Link on Raspberry OS is to use the package
-manager. However, keep reading to learn about alternative options.
+We are going to install [Steam Link][Steam Link] on the Raspberry Pi, which will
+later connect to the computer running [Steam] (host). The easiest way to install
+Steam Link on Raspberry OS is to use the package manager. However, keep reading
+to learn about alternative options.
 
 Using Raspberry OS package manager:
 
@@ -402,7 +401,7 @@ Using Raspberry OS package manager:
     $ sudo apt install -y steamlink
 
 As of August 29, 2020, the latest version of Steam Link on Raspberry Pi is
-`1.1.64.162` as advertised on the top of a pinned post on the [official Steam
+`1.1.64.162` as advertised at the top of a pinned post on the [official Steam
 Link discussion board](https://steamcommunity.com/app/353380/discussions/6/).
 The same information can be found programmatically using the command below
 
