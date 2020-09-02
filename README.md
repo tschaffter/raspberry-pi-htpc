@@ -68,6 +68,9 @@ command confirms that ERTM has been successfully disabled.
     $ cat /sys/module/bluetooth/parameters/disable_ertm
     Y
 
+> TODO: The above command returns 'Y' after reboot but /etc/modprobe.d/bluetooth.conf
+does not exist. Is the following needed?
+
 If `bluetoothctl` is running when we disabled ERTM, we may need to exit and
 run it again before attempting to connect to the controller. We can use the
 command below to permanently disable ERTM starting from the next reboot.
@@ -294,15 +297,37 @@ TODO
 - [Micro-HDMI to HDMI TV Adapter Cable][uhdmi_hdmi_cable]
   - Recommended features: 4K Video at 60 Hz, Audio Return Channel (ARC)
 
+### List soundcards
+
+Linux tends to put information about system processes, including some of the
+hardware configuration information, in a virtual filesystem called `/proc`. We
+can check the existence of a soundcard by looking in `/proc/asound/cards`.
+
+This is the list of soundcards returned when no powered HDMI devices ares
+connected to/recognized by the Raspberry Pi.
+
+    $ cat /proc/asound/cards
+    0 [Headphones     ]: bcm2835_headphonbcm2835 Headphones - bcm2835 Headphones
+                        bcm2835 Headphones
+
+Now we run the same command when an powered monitor is connected to the port
+HDMI0 of the Pi and recognized by it:
+
+    $ cat /proc/asound/cards
+    0 [b1             ]: bcm2835_hdmi - bcm2835 HDMI 1
+                        bcm2835 HDMI 1
+    1 [Headphones     ]: bcm2835_headphonbcm2835 Headphones - bcm2835 Headphones
+                        bcm2835 Headphones
+
 ### Test audio output devices
 
 First we need to check that our audio hardware is functional before moving on with
 the software configuration. For this test, we use the video player [Omxplayer]
 specifically made for the Raspberry Pi's GPU from the Kodi project.
 
-    sudo apt install -y omxplayer
+    sudo apt install --no-install-recommends -y omxplayer
 
-### Test jack audio output
+### Test 3.5mm jack audio output
 
 Connect your speaker or headset to the jack port of the Raspberry Pi. Run the
 following commands to download and play an mp3 sample file with the audio output
@@ -325,26 +350,26 @@ connect the cable to the Raspberry Pi HDMI port adjacent to the USB-C power inpu
 Download the mp3 sample file if not done previously, and run `omxplayer` with
 the argument `-o hdmi` to direct the audio to the TV speakers.
 
-    curl -O https://raw.githubusercontent.com/tschaffter/raspberry-pi-htpc/master/audio/example.mp3
     omxplayer -o hdmi example.mp3
 
 ### Install PulseAudio
 
-PulseAudio is a sound system for Linux – this means that it works as a proxy
-between your audio hardware and programs that want to play sounds. It just
-happens that Steam Link relies on PulseAudio, so let's install it.
+PulseAudio is a general purpose sound server intended to run as a middleware
+between your applications and your hardware devices, either using ALSA or OSS.
+Steam Link and other applications relies on it to play audio, so let's install it.
 
-    sudo apt install --no-install-recommends -y pulseaudio
+    sudo apt install -y pulseaudio
 
-Enable the service `pulseaudio` to start automatically at boot:
+Systemd offers users the ability to manage services under the user’s control
+swith a per-user systemd instance, enabling users to start, stop, enable, and
+disable their own units. Since we are running Steam Link as a non-root user, we
+will do the same for PulseAudio.
+
+At this point, the user `pulseaudio` service is inactive. Let enable it so that
+this service starts automatically at boot time, and start it.
 
     $ systemctl --user enable pulseaudio
-    Created symlink /home/tschaffter/.config/systemd/user/default.target.wants/pulseaudio.service → /usr/lib/systemd/user/pulseaudio.service.
-    Created symlink /home/tschaffter/.config/systemd/user/sockets.target.wants/pulseaudio.socket → /usr/lib/systemd/user/pulseaudio.socket.
-
-Run the commands below to start the service immediately:
-
-    $ systemctl start --user pulseaudio
+    $ systemctl --user start pulseaudio
     $ systemctl status --user pulseaudio
     ● pulseaudio.service - Sound Service
       Loaded: loaded (/usr/lib/systemd/user/pulseaudio.service; enabled; vendor preset: enabled)
@@ -353,9 +378,82 @@ Run the commands below to start the service immediately:
       CGroup: /user.slice/user-1001.slice/user@1001.service/pulseaudio.service
               └─2193 /usr/bin/pulseaudio --daemonize=no
 
-### Test PulseAudio
+### Add output sinks to PulseAudio
 
+`aplay` is a command-line sound recorder and player for ALSA soundcard driver.
+`aplay -l` lists all soundcards and digital audio devices.
 
+    $ aplay -l
+    aplay: device_list:272: no soundcards found...
+
+It looks like there are no soundcard supported by ALSA.
+
+We use `pactl` to control the running PulseAudio sound server. The command given
+below lists the output sinks detected.
+
+    $ pacmd list-sinks | grep -e 'name:' -e 'index:'
+    * index: 0
+        name: <auto_null>
+
+Only a dummy output sink is detected, which means that there are no sinks that
+we can use to play audio.
+
+The command `pacmd` is used to reconfigure a PulseAudio sound server during
+sruntime. We can also use it to list the soundcards recognized by PulseAudio.
+
+    $ pacmd list-cards
+    0 card(s) available.
+
+The solution is to install `pulsemixer`, a command-line mixer for PulseAudio with
+a curses interface.
+
+    sudo apt install -y pulsemixer
+
+We run the same commands as above and this time the soundcards are detected by
+`aplay` and `pacmd`.
+
+    $ aplay -l | grep card
+    card 0: b1 [bcm2835 HDMI 1], device 0: bcm2835 HDMI 1 [bcm2835 HDMI 1]
+    card 1: Headphones [bcm2835 Headphones], device 0: bcm2835 Headphones [bcm2835 Headphones]
+
+<!-- tsk -->
+
+    $ pacmd list-cards
+    2 card(s) available.
+
+Here are the output sinks now available to PulseAudio.
+
+    $ pulsemixer --list-sink
+    Sink: ID: 0, Name: Built-in Audio Analog Mono, Mute: 0, Channels: 1, Volumes: ['100%']
+    Sink: ID: 1, Name: Built-in Audio Analog Mono, Mute: 0, Channels: 1, Volumes: ['40%']
+
+### Play audio using PulseAudio
+
+    $ curl -O https://raw.githubusercontent.com/tschaffter/raspberry-pi-htpc/master/audio/example.wav
+    $ aplay example.wav
+    Playing WAVE 'example.wav' : Signed 16 bit Little Endian, Rate 44100 Hz, Stereos
+
+### Set the default output audio device
+
+Use the command below to identify the index of the target output sink.
+
+    $ pacmd list-sinks | grep -e 'name:' -e 'index:' -e 'alsa.name'
+    * index: 0
+            name: <alsa_output.platform-bcm2835_audio.analog-mono>
+                alsa.name = "bcm2835 HDMI 1"
+      index: 1
+            name: <alsa_output.platform-bcm2835_audio.analog-mono.2>
+                alsa.name = "bcm2835 Headphones"
+
+The asterisk in front of the first sink shows that it's the default sink. The
+command below tells PulseAudio to redirect the audio to the 3.5mm jack output
+("Headphones").
+
+    pacmd set-default-sink 1
+
+The change is immediate and persists after a system restart. However, the change
+only make all *new* outputs go to sink 1. The change does not affects outputs
+that are already streaming at the time the command is executed.
 
 ## Overclocking
 
