@@ -125,87 +125,107 @@ read_hcidump_data <- function(filename) {
 }
 ```
 
-Read data
+We read the data and apply the following transformation to them for each
+experiment.
+
+- Set time to 0 when the first controller button is pressed
+- Keep only data between 0 and 300 seconds
+- Start HCI RX and TX bytes at 0 bytes (bt data)
 
 ```{r}
-# Generates all the combinations of parameters
+# generate all the combinations of parameters
 experiments <- expand.grid(
   hci = names(hcis), 
   device = names(devices), 
   location = names(locations)
 )
 
-# Read data
-data <- lapply(1:nrow(experiments), function(i) {
-  e <- experiments[i,]
-  list(
-    bt = read_bt_data(file.path(data_dir, paste(e$hci, e$device , e$location, "bt.tsv", sep = "_"))),
-    js = read_jstest_data(file.path(data_dir, paste(e$hci, e$device , e$location, "jstest.txt", sep = "_"))),
-    hcidump = read_hcidump_data(file.path(data_dir, paste(e$hci, e$device , e$location, "hcidump_.txt", sep = "_")))
-  )
-})
-
-# Set experiment names
-names(data) <- experiments %>% 
+# create experiment names 
+experiment_names <- experiments %>% 
   unite(x, names(experiments), sep = "_", remove = TRUE) %>% 
   pull(x)
-```
 
-We apply the following transformation to the data of each experiment.
+# read and transform data
+data <- lapply(1:nrow(experiments), function(i) {
+  e <- experiments[i,]
 
-- Set time to 0 when the first controller button is pressed
-- Keep only data between 0 and 300 s
-- Start HCI RX and TX bytes at 0 bytes (bt data)
-
-```{r}
-data_ <- lapply(names(data), function(data_name) {
-  d <- data[[data_name]]
+  # read raw data
+  bt = read_bt_data(file.path(data_dir, paste(
+    e$hci, e$device , e$location, "bt.tsv", sep = "_"
+  )))
+  js = read_jstest_data(file.path(
+    data_dir,
+    paste(e$hci, e$device , e$location, "jstest.txt", sep = "_")
+  ))
+  hcidump = read_hcidump_data(file.path(
+    data_dir,
+    paste(e$hci, e$device , e$location, "hcidump_.txt", sep = "_")
+  ))
   
-  # Set time to 0 when pressed first controller button
-  t0 <- d$js$time[1]
-  d$bt$time <- d$bt$time - t0
-  d$js$time <- d$js$time - t0
+  # set time to 0 when pressed first controller button
+  t0 <- js$time[1]
+  bt$time <- bt$time - t0
+  js$time <- js$time - t0
+  hcidump$time <- hcidump$time - t0
   
-  # Keep bt data collected
-  # - after pressing first button
-  # - until pressing the last button
-  d$bt <- d$bt[d$bt$time >= 0 & d$bt$time <= t_max,]
-  d$js <- d$js[d$js$time >= 0 & d$js$time <= t_max,]
-  d$hcidump <- d$hcidump[d$hcidump$time >= 0 & d$hcidump$time <= t_max,]
-
-  # Start HCI RX and TX bytes at 0 bytes.
-  d$bt$hci.rx.bytes <- d$bt$hci.rx.bytes - d$bt$hci.rx.bytes[1]
-  d$bt$hci.tx.bytes <- d$bt$hci.tx.bytes - d$bt$hci.tx.bytes[1]
-
-  d
+  # keep bt data collected after pressing the first button until the end of the
+  # experiment defined by t_max
+  bt <- subset(bt, time >= 0 & time <= t_max)
+  js <- subset(js, time >= 0 & time <= t_max)
+  hcidump <- subset(hcidump, time >= 0 & time <= t_max, drop = FALSE)
+  
+  # start HCI RX and TX bytes at 0 bytes
+  bt$hci.rx.bytes <- bt$hci.rx.bytes - bt$hci.rx.bytes[1]
+  bt$hci.tx.bytes <- bt$hci.tx.bytes - bt$hci.tx.bytes[1]
+  
+  list(bt = bt, js = js, hcidump = hcidump)
 })
-names(data_) <- names(data)
+
+# name data
+names(data) <- experiment_names
 ```
 
-Combine all the data
+We create a second representation of the data after applying the following
+transformations:
+
+- bt data: keep only numeric and variables that may change over time
+- js data: count the number inputs per second
+- hcidump data: count the number of packets received per second
+
+We then pivot and combine these data to make it easier to plot them.
 
 ```{r}
-data_name <- names(data_)
-data_name
-data_ <- lapply(data_name, function(data_name) {
-  data_name <- "hci0_xbox_front"
-  d <- data[[data_name]]
-
-  d$bt %>%
-    select_if(is.numeric) %>%
-    select(-c("hci.bluetooth.version", "dev.0.bluetooth.version")) %>%
-    pivot_longer(!time, names_to = "name", values_to = "value")
-
+data_ <- lapply(1:nrow(experiments), function(i) {
+  e <- experiments[i,]
+  name <- paste(e$hci, e$device, e$location, sep = "_")
+  d <- data[[name]]
   
+  # transform, pivot and combine data
+  df <- bind_rows(
+    d$bt %>%
+      select_if(is.numeric) %>%
+      select(-c("hci.bluetooth.version", "dev.0.bluetooth.version")) %>%
+      pivot_longer(!time, names_to = "name", values_to = "value"),
+  
+    d$js %>%
+      group_by(time) %>%
+      summarise(n_inputs = length(time), .groups = 'drop') %>%
+      pivot_longer(!time, names_to = "name", values_to = "value"),
     
-  d$js %>%
-    pivot_longer(!time, names_to = "name", values_to = "value")
+    d$hcidump %>%
+      group_by(time) %>%
+      summarise(n_packets = length(time), .groups = 'drop') %>%
+      pivot_longer(!time, names_to = "name", values_to = "value")
+  )
   
+  # append experiment parameters
+  df$hci <- e$hci
+  df$device <- e$device
+  df$location <- e$location
+
+  df
 })
-names(data_) <- data_name
 ```
-
-
 
 # Analysis
 
