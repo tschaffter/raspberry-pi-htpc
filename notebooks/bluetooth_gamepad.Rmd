@@ -137,7 +137,8 @@ experiment.
 experiments <- expand.grid(
   hci = names(hcis), 
   device = names(devices), 
-  location = names(locations)
+  location = names(locations),
+  stringsAsFactors = FALSE
 )
 
 # create experiment names 
@@ -195,7 +196,7 @@ transformations:
 We then pivot and combine these data to make it easier to plot them.
 
 ```{r}
-data_ <- lapply(1:nrow(experiments), function(i) {
+data_ <- do.call(rbind, lapply(1:nrow(experiments), function(i) {
   e <- experiments[i,]
   name <- paste(e$hci, e$device, e$location, sep = "_")
   d <- data[[name]]
@@ -222,12 +223,21 @@ data_ <- lapply(1:nrow(experiments), function(i) {
   df$hci <- e$hci
   df$device <- e$device
   df$location <- e$location
-
+  
   df
-})
+}))
 ```
 
 # Analysis
+
+
+```{r}
+property <- "hci.rx.bytes"
+d <- subset(data_, name == property & hci == "hci0" & device == "xbox" & location == "front")
+
+ggplot(d, aes(time, value)) +
+    geom_line()
+```
 
 
 
