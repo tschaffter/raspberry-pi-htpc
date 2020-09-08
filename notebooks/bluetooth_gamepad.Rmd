@@ -12,10 +12,7 @@ rm(list=ls())
 
 library(ggplot2)
 library(dplyr)
-# library(purrr)
-# library(tibble)
 library(tidyr)
-# library(xml2)
 ```
 
 # Overview
@@ -54,15 +51,15 @@ We define all the parameters of the experiments.
 ```{r}
 hcis <- list(
   hci0 = list(
-    name = "Pi4 Bluetooth",
+    name = "Raspberry Pi 4",
     mac = "DC:A6:32:8A:DA:FD",
-    bt_version = "5"
+    bt_version = "5.0"
+  ),
+  hci1 = list(
+    name = "ASUS USB-BT400",
+    mac = "5C:F3:70:94:05:7A",
+    bt_version = "4.0"
   )
-  # hci1 = list(
-  #   name = "ASUS USB-BT400",
-  #   mac = "5C:F3:70:94:05:7A",
-  #   bt_version = "4"
-  # )
 )
 
 devices <- list(
@@ -73,7 +70,7 @@ devices <- list(
   ),
   ps4 = list(
     name = "PS4 Controller",
-    bt_version = "4",
+    bt_version = "4.0",
     color = "#003791"  # PS dark blue
   )
 )
@@ -89,9 +86,22 @@ locations <- list(
   # )
 )
 
-data_dir <- "/data"
-slate_gray <- "#3A3A3A"
+phases <- list(
+  list(start = 0, end = 60),
+  list(start = 120, end = 180),
+  list(start = 240, end = 300)
+)
+
+data_dir <- "/data/1"
 t_max <- 300
+
+# colors
+slate_gray <- "#3A3A3A"
+colors <- list(
+  "#118df0",  # blue
+  "#f8aa27",   # orange
+  "#f35f5f"  # red
+)
 ```
 
 Helper functions
@@ -221,7 +231,7 @@ data_ <- do.call(rbind, lapply(1:nrow(experiments), function(i) {
   
   # append experiment parameters
   df$hci <- e$hci
-  df$device <- e$device
+  df$device <- factor(e$device, levels = c(names(devices)))
   df$location <- e$location
   
   df
@@ -230,15 +240,212 @@ data_ <- do.call(rbind, lapply(1:nrow(experiments), function(i) {
 
 # Analysis
 
+All the properties
 
 ```{r}
-property <- "hci.rx.bytes"
-d <- subset(data_, name == property & hci == "hci0" & device == "xbox" & location == "front")
-
-ggplot(d, aes(time, value)) +
-    geom_line()
+cat(sort(unique(data_$name)), sep="\n")
 ```
 
+```{r}
+property_limits = list(
+  n_inputs = c(0, max(subset(data_, name == "n_inputs")$value)),
+  n_packets = c(0, max(subset(data_, name == "n_packets")$value))
+)
+
+property_axis_title = list(
+  hci.rx.bytes = "RX bytes"
+)
+```
+
+
+## HCI data received over time
+
+We show below the amount of bytes received by the built-in Bluetooth of the
+Raspberry Pi (`hdi0`, Bluetooth 5.0) and the ASUS Bluetooth adapter (`hci1`,
+Bluetooth 4.0). The ASUS adapter is USB 2.0 and connected to a port UBS 2.0 of 
+the Raspberry Pi 4. The ASUS adapter is advertised as supporting up to 3 Mbps
+(megabits per second).
+
+One of the main differences between the Xbox One S and the PS4 controllers is
+that the Xbox controller only sends data when buttons are pressed while the PS4
+controller constantly sends data. This may come from the built-in accelerometer 
+and gyroscope of the PS4 controller that could be constantly streamed. Note that
+maintaining the PS4 controller still does not affect the amount of data received
+(data not shown).
+
+The amount of data received by `hci0` and `hci1` is almost identical when using
+the PS4 controller. The amount of data received is 6.4 KB (kilobytes) over 5 
+minutes. This corresponds to a RX rate of 171.4 Kbps (kilobits per second).
+
+The amount of data received by `hci0` and `hci1` is very different when using
+the Xbox controller. As we have observed that the controller only sends data
+when buttons are pressed, one reason could be that less buttons were pressed
+when collecting data for `hci1` than when doing so for `hci0`. We don't have
+this information but we have the number of buttons pressed / inputs captured by
+`jstest`. However, if Bluetooth packets are lost, this would naturally translate
+into a lower number of inputs reported by `jstest`. A figure shown below reveals
+that the number of inputs received from the Xbox controller by`hci0` and `hci1` 
+is indeed different, though the difference in the RX rate is smaller in the 
+third repetition. Reproducing the entire experiments led to similar results 
+where the RX rate is much lower when using `hci1` than `hci0`, therefore we can
+not discard the hypothesis that something else contributes to lower the RX rate
+when using `hci1`. At the same time, we show with the PS4 controller that we can
+successfully reproduce a similar number of inputs when using `hci0` and `hci1` 
+(see below).
+
+The amount of data per packets is larger for the PS4 controller than the Xbox
+controller. This amount of data is independent of the button pressed. This
+amount is larger for the PS4 in part because the values of the built-in 
+accelerometer and gyroscope are likely transmitted. We will have a look at the
+content of these packets later in this document. Here, the RX rate when using
+the Xbox controller is 28 Kbps for `hci0` and 19 Kbps for `hci1`. Here the rate
+is computed only over the 3 minutes buttons were pressed.
+
+```{r, results='hide'}
+property <- "hci.rx.bytes"
+
+plots <- lapply(names(devices), function(dev) {
+  # filter data
+  d <- subset(data_, name == property & device == dev & location == "front")
+  
+  ggplot(d, aes(time, value, linetype = hci)) +
+    geom_line(color = devices[[dev]]$color) +
+    scale_linetype_discrete(name = "HCI", labels = sapply(hcis, "[[", "name")) +
+    ggtitle(devices[[dev]]$name) +
+    xlab("Time (s)") +
+    ylab(property_axis_title[[property]]) +
+    theme(plot.title = element_text(hjust = 0.5))
+})
+
+print(plots)
+```
+
+## Number of inputs reported by jstest
+
+Here we report the number of inputs reported by `jstest` run on the Raspberry
+Pi. As briefly introduced above, the number of inputs shown by `jstest` may be
+different from the ground truth if the Bluetooth communication loose packets.
+We can already say that the number of RX and TX errors reported by `hci0` and
+`hci1` in our experiments is 0, so it does not seem that packets are lost.
+
+```{r, results='hide'}
+property <- "n_inputs"
+
+plots <- lapply(names(devices), function(dev) {
+  # filter data
+  d <- subset(data_, name == property & device == dev & location == "front")
+  
+  ggplot(d, aes(time, value, color = hci)) +
+    geom_point(size = 1) +
+    stat_smooth(method = lm, formula = 'y ~ x', se = FALSE, data=subset(d, time < phases[[1]]$end)) +
+    stat_smooth(method = lm, formula = 'y ~ x', se = FALSE, data=subset(d, time >= phases[[2]]$start & time < phases[[2]]$end)) +
+    stat_smooth(method = lm, formula = 'y ~ x', se = FALSE, data=subset(d, time >= phases[[3]]$start & time < phases[[3]]$end)) +
+    scale_color_manual(name = "HCI", labels = sapply(hcis, "[[", "name"), values = colors) +
+    ggtitle(devices[[dev]]$name) +
+    xlab("Time (s)") +
+    ylab(property_axis_title[[property]]) +
+    theme(plot.title = element_text(hjust = 0.5))
+})
+
+print(plots)
+```
+
+## RX and TX errors
+
+`hci0` and `hci1` do not report RT and TX errors when using the Xbox and PS4
+controller.
+
+```{r, results='hide'}
+property <- "hci.rx.errors"
+
+plots <- lapply(names(devices), function(dev) {
+  # filter data
+  d <- subset(data_, name == property & device == dev & location == "front")
+  
+  ggplot(d, aes(time, value, color = hci)) +
+    geom_point(size = 1) +
+    stat_smooth(method = lm, formula = 'y ~ x', se = FALSE, data=subset(d, time < phases[[1]]$end)) +
+    stat_smooth(method = lm, formula = 'y ~ x', se = FALSE, data=subset(d, time >= phases[[2]]$start & time < phases[[2]]$end)) +
+    stat_smooth(method = lm, formula = 'y ~ x', se = FALSE, data=subset(d, time >= phases[[3]]$start & time < phases[[3]]$end)) +
+    scale_color_manual(name = "HCI", labels = sapply(hcis, "[[", "name"), values = colors) +
+    ggtitle(devices[[dev]]$name) +
+    xlab("Time (s)") +
+    ylab(property_axis_title[[property]]) +
+    theme(plot.title = element_text(hjust = 0.5))
+})
+
+print(plots)
+```
+
+
+
+
+I'm here
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+property <- "n_inputs"
+# property <- "n_packets"
+
+d <- subset(data_, name == property &  location == "front")
+
+ggplot(d, aes(time, value, color=device, shape=hci)) +
+  geom_point(colour = slate_gray, size = 1) +
+  stat_smooth(method = loess, formula = 'y ~ x', se = FALSE, data=subset(d, time < phases[[1]]$end)) +
+  stat_smooth(method = loess, formula = 'y ~ x', se = FALSE, data=subset(d, time >= phases[[2]]$start & time < phases[[2]]$end)) +
+  stat_smooth(method = loess, formula = 'y ~ x', se = FALSE, data=subset(d, time >= phases[[3]]$start & time < phases[[3]]$end)) +
+  scale_y_continuous(limits = property_limits[[property]]) +
+  scale_color_manual(name = "Receiver", values = sapply(devices, "[[", "color")) +
+  scale_shape_discrete(name = "Device") +  # labels = sapply(hcis, "[[", "name")
+  xlab("Time (s)") +
+  ylab(property)
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+# property <- "n_inputs"
+property <- "n_packets"
+
+d <- subset(data_, name == property &  location == "front")
+
+ggplot(d, aes(time, value, color=device, shape=hci)) +
+  geom_point(colour = slate_gray, size = 1) +
+  stat_smooth(method = loess, formula = 'y ~ x', se = FALSE, data=subset(d, time < phases[[1]]$end)) +
+  stat_smooth(method = loess, formula = 'y ~ x', se = FALSE, data=subset(d, time >= phases[[2]]$start & time < phases[[2]]$end)) +
+  stat_smooth(method = loess, formula = 'y ~ x', se = FALSE, data=subset(d, time >= phases[[3]]$start & time < phases[[3]]$end)) +
+  scale_y_continuous(limits = property_limits[[property]]) +
+  scale_color_manual(name = "Receiver", values = sapply(devices, "[[", "color")) +
+  scale_shape_discrete(name = "Device") +  # labels = sapply(hcis, "[[", "name")
+  xlab("Time (s)") +
+  ylab(property)
+```
 
 
 ```{r, echo=FALSE, message=FALSE, results='hide'}
