@@ -10,6 +10,14 @@ output:
 ```{r}
 rm(list=ls())
 
+packages <- c(
+  "dplyr",
+  "ggplot2",
+  "tidyr"
+)
+new.packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -92,7 +100,7 @@ phases <- list(
   list(start = 240, end = 300)
 )
 
-data_dir <- "/data/1"
+data_dir <- "/data/0"
 t_max <- 300
 
 # colors
